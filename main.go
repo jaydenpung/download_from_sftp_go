@@ -27,7 +27,12 @@ func main() {
 		sftpHost          = os.Getenv("SFTP_HOST")
 		sftpPort          = os.Getenv("SFTP_PORT")
 		downloadDirectory = os.Getenv("DOWNLOAD_DIRECTORY")
+		sourceDirectory = os.Getenv("SOURCE_DIRECTORY")
 	)
+
+	if sourceDirectory == "" {
+		sourceDirectory = "."
+	}
 
 	// Create a url
 	rawurl := fmt.Sprintf("sftp://%v:%v@%v", sftpUser, sftpPass, sftpHost)
@@ -76,7 +81,7 @@ func main() {
 	// Connect to server
 	conn, err := ssh.Dial("tcp", addr, &config)
 	if err != nil {
-		log.Fatalf("Failed to connec to host [%s]: %v", addr, err)
+		log.Fatalf("Failed to connect to host [%s]: %v", addr, err)
 	}
 
 	defer conn.Close()
@@ -91,7 +96,7 @@ func main() {
 	log.Printf("Connected to host!")
 
 	// List files in the root directory .
-	theFiles, err := listFiles(*sc, "Inbox")
+	theFiles, err := listFiles(*sc, sourceDirectory)
 	if err != nil {
 		log.Fatalf("failed to list files in .: %v", err)
 	}
@@ -101,7 +106,7 @@ func main() {
 	log.Printf("%19s %12s %s", "MOD TIME", "SIZE", "NAME")
 	for _, theFile := range theFiles[len(theFiles)-5:] {
 		log.Printf("%19s %12s %s", theFile.ModTime, theFile.Size, theFile.Name)
-		err = downloadFile(*sc, "Inbox/"+theFile.Name, downloadDirectory+"/"+theFile.Name)
+		err = downloadFile(*sc, sourceDirectory+"/"+theFile.Name, downloadDirectory+"/"+theFile.Name)
 		if err != nil {
 			log.Fatal("Error downloading file: ", err)
 		}
